@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Colour Match Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+
+    <style>
+        #main {
+            display: inline-flex;
+            flex-direction: column;
+        }
+
+        .drop-zone {
+            width: 200px;
+            height: 200px;
+            float: left;
+            margin-right: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 80px;
+            margin-bottom: 50px;
+        }
+
+        .pink-zone {
+            background-color: rgb(253, 154, 192);
+        }
+
+        .purple-zone {
+            background-color: rgb(133, 24, 206);
+        }
+
+        .orange-zone {
+            background-color: rgb(236, 133, 49);
+        }
+
+        .green-zone {
+            background-color: rgb(48, 223, 62);
+        }
+
+        .drop-zone-over {
+            opacity: 0.5
+        }
+
+        .draggable {
+            position: absolute;
+            width: 190px;
+            height: 190px;
+            background-size: cover;
+
+
+        }
+
+        #draggables {
+            position: relative;
+            margin-left: 585px;
+
+        }
+
+        #pink-draggable {
+            background-image: url('pink.jpg');
+        }
+
+        #purple-draggable {
+            background-image: url('purple.jpg');
+        }
+
+        #orange-draggable {
+            background-image: url('orange.jpg');
+        }
+
+        #green-draggable {
+            background-image: url('green.jpg');
+        }
+
+
+        h1 {
+            text-align: center;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            font-size: 80px;
+            color: blueviolet
+        }
+
+        h2 {
+            text-align: center;
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+            font-size: 30px;
+            color: rgb(10, 10, 10);
+            Margin-top: -50px;
+            margin-bottom: 50px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="main">
+        <div>
+
+            <h1>Colour Match Game</h1>
+
+            <h2>Match the colors with the fruits </h2>
+        </div>
+
+        <div>
+            <div class="drop-zone pink-zone" data-color="pink"></div>
+            <div class="drop-zone purple-zone" data-color="purple"></div>
+            <div class="drop-zone orange-zone" data-color="orange"></div>
+            <div class="drop-zone green-zone" data-color="green"></div>
+        </div>
+
+
+        <div id="draggables"></div>
+    </div>
+
+    <script>
+
+        // Renklerin birbirleriyle eşleşebilmesi için değişkenleri tanımlanır.
+
+        var completed = 0;
+        var draggables = 0;
+
+        //Resimlerin rastgele sıralanması için renkler tanımlanır.
+        const colors = ["pink", "orange", "purple", "green"];
+        const draggablesContainer = document.getElementById('draggables');
+
+        // renkler arrayinin içinde element olduğu sürece aşağıdaki işlem tekrarlanır
+        while (colors.length) {
+            // rastgele bir renk seçilir
+            const next = Math.floor(Math.random() * colors.length);
+            //seçilen renk ,renk klasöründen çıkarılır.
+            const color = colors.splice(next, 1);
+
+            // taşınabilir kutu yaratılır ve attribute'ları set edilir
+            const div = document.createElement("DIV");
+            div.id = color + "-draggable";
+            div.classList.add("draggable");
+            div.dataset.color = color;
+            div.setAttribute('draggable', true);
+
+            // yaratılan kutucuk dom'daki uygun container elementinin içine eklenir
+            draggablesContainer.appendChild(div);
+
+            //////// sürükleme eventListeneri eklenir.
+            div.addEventListener("dragstart", function (e) {
+                e.dataTransfer.setData("text/plain", div.id);
+            });
+
+            // draggables sayısı 1 artırılır
+            draggables++;
+        }
+
+        //draggable ,dropZone'a gelince opacity eklenir.
+        for (const dropZone of document.querySelectorAll(".drop-zone")) {
+            dropZone.addEventListener("dragover", function (e) {
+                e.preventDefault();
+                dropZone.classList.add("drop-zone-over");
+            });
+
+            //DropZone'a nesne götürülüp geri çekilince opacity ilk değerine döner.
+            dropZone.addEventListener("dragleave", function (e) {
+                e.preventDefault();
+                dropZone.classList.remove("drop-zone-over");
+            });
+
+            //DropZone'a bırakılan nesneye bırakılma eventi eklenir.
+            dropZone.addEventListener("drop", function (e) {
+                e.preventDefault();
+                //data taşınır.
+                const droppedElementId = e.dataTransfer.getData("text/plain");
+                const droppedElement = document.getElementById(droppedElementId);
+                //taşınan nesne ve taşınan yerlerin rengi eşleşiyorsa...
+                if (droppedElement.getAttribute("data-color") === dropZone.getAttribute("data-color")) {
+                    //...eşleşme sağlanırsa nesne taşınır.
+                    dropZone.appendChild(droppedElement);
+
+                    // renklerin birbirleriyle eşleşebilmesi için tanımlanan değişken her eşleşmede arttırılır.
+                    completed++;
+                    //renklerin birbirleriyle eşleşebilmesi için olan değişkenler eşitlenince tebrikler yazısı çıkar.
+                    if (completed === draggables) {
+                        //alert komutu geç çalıştığı için setTimeout eklenir.
+                        setTimeout(() => alert('Congratulations!'), 400);
+                    }
+                } else {
+                    //Yanlış eşleştirmede hata verir.
+                    alert('This is not correct match');
+
+                }
+                //Taşınan nesne, yerine konduğunda opacity ilk değerine döner..
+                dropZone.classList.remove("drop-zone-over");
+
+
+
+            });
+        }
+
+
+    </script>
+</body>
+
+</html>
